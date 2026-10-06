@@ -1,0 +1,167 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  native:
+    name: C kernel + C++ engine (${{ matrix.compiler }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        compiler: [gcc-13, clang-16]
+        include:
+          - os: ubuntu-latest
+            compiler: gcc-13
+            cc: gcc-13
+            cxx: g++-13
+          - os: ubuntu-latest
+            compiler: clang-16
+            cc: clang-16
+            cxx: clang++-16
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ${{ matrix.cc }} ${{ matrix.cxx }}
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_C_COMPILER=${{ matrix.cc }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+      - name: Build (warnings-as-errors for the project sources)
+        run: cmake --build build -j"$(nproc)"
+          -- CFLAGS="-Werror" CXXFLAGS="-Werror"
+      - name: Kernel + engine tests
+        run: ctest --test-dir build --output-on-failure
+      - name: Engine selftest + all experiments
+        run: |
+          ./build/engine/micrort-engine selftest
+          for f in experiments/*.json; do
+            ./build/engine/micrort-engine run --config "$f" --out /tmp/$(basename "$f").result.json
+          done
+      - name: Determinism regression (byte-identical modulo wallMicros)
+        run: |
+          for f in experiments/*.json; do
+            ./build/engine/micrort-engine run --config "$f" --out /tmp/a.json
+            ./build/engine/micrort-engine run --config "$f" --out /tmp/b.json
+            python3 - "$f" <<'EOF'
+          import json, sys
+          a = json.load(open('/tmp/a.json')); b = json.load(open('/tmp/b.json'))
+          a.pop('wallMicros', None); b.pop('wallMicros', None)
+          assert a == b, f"non-deterministic result for {sys.argv[1]}"
+          print(f"deterministic: {sys.argv[1]}")
+          EOF
+          done
+
+  python:
+    name: Python analysis layer
+    runs-on: ubuntu-latest
+    needs: native
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain (build the engine for integration tests)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j"$(nproc)"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        working-directory: services/api
+        run: pip install fastapi uvicorn pydantic pytest httpx ruff
+      - name: Lint
+        working-directory: services/api
+        run: python -m ruff check app tests
+      - name: Tests (real engine binary)
+        working-directory: services/api
+        env:
+          MICRORT_ENGINE_BIN: ${{ github.workspace }}/build/engine/micrort-engine
+        run: python -m pytest -q
+
+  web:
+    name: Web workstation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Lint
+        run: bun run lint
+      - name: Type check
+        run: bunx tsc --noEmit
+
+  docs:
+    name: Documentation links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify internal links and required files
+        run: |
+          python3 - <<'EOF'
+          import os, re, sys
+          missing_files = [f for f in [
+              "README.md", "LICENSE", "CONTRIBUTING.md", "SECURITY.md",
+              "THIRD_PARTY_NOTICES.md",
+              "docs/fa/README_FA.md", "docs/fa/INSTALLATION_FA.md",
+              "docs/fa/USER_GUIDE_FA.md", "docs/fa/ARCHITECTURE_FA.md",
+              "docs/fa/SCHEDULING_FA.md", "docs/fa/SYNCHRONIZATION_FA.md",
+              "docs/fa/DEADLOCK_FA.md", "docs/fa/MEMORY_FA.md",
+              "docs/fa/API_FA.md", "docs/fa/DEVELOPMENT_FA.md",
+              "docs/fa/COPYRIGHT_FA.md",
+          ] if not os.path.exists(f)]
+          if missing_files:
+              sys.exit(f"missing documentation files: {missing_files}")
+          # markdown link targets inside the repo
+          link_re = re.compile(r"\]\((?!http[s]?://|#|mailto:)([^)#\s]+)")
+          docs = []
+          for root, _, files in os.walk("."):
+              if ("node_modules" in root or ".git/" in root or "build/" in root
+                      or "skills/" in root or "examples/" in root
+                      or "mini-services/" in root):
+                  continue
+              docs += [os.path.join(root, f) for f in files if f.endswith((".md",))]
+          broken = []
+          for d in docs:
+              text = open(d, encoding="utf-8").read()
+              for m in link_re.finditer(text):
+                  target = m.group(1).split("#")[0]
+                  if not target:
+                      continue
+                  path = os.path.normpath(os.path.join(os.path.dirname(d), target))
+                  if not os.path.exists(path):
+                      broken.append(f"{d}: {target}")
+          if broken:
+              sys.exit("broken links:\n" + "\n".join(broken))
+          print(f"docs OK: {len(docs)} files scanned")
+          EOF
+      - name: Verify screenshots and diagrams exist
+        run: |
+          for f in docs/assets/*.png docs/assets/*.svg; do
+            [ -s "$f" ] || { echo "missing/empty asset: $f"; exit 1; }
+          done
+          echo "visual assets OK"
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan history for credentials
+        run: |
+          ! git log --all --full-history -p \
+            | grep -inE "github_pat_[A-Za-z0-9_]{20,}|ghp_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC )?PRIVATE KEY-----" \
+            || { echo "credential pattern found in history"; exit 1; }
+          echo "history clean"
