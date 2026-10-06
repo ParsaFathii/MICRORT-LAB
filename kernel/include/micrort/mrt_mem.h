@@ -38,7 +38,10 @@ void mrt_pool_init(mrt_pool_t *p, size_t block_size, size_t block_count);
 
 size_t mrt_pool_used(const mrt_pool_t *p);
 size_t mrt_pool_free_count(const mrt_pool_t *p);
-/* Sum of block indices currently allocated (diagnostics). */
+/* Allocated bytes = used blocks * block_size (diagnostics).
+ * [2-a doc fix: the original comment said "sum of block indices", which
+ * contradicts the function name and the engine's memory metrics; the
+ * name is authoritative.] */
 size_t mrt_pool_used_bytes(const mrt_pool_t *p);
 
 /* ------------------------------------------------------------------ */

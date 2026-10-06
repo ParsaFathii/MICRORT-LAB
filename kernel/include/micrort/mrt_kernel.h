@@ -48,6 +48,16 @@ typedef struct mrt_kernel {
     mrt_time_t ctx_overhead_time; /* ticks burned in context switches  */
     mrt_time_t idle_time;
 
+    /* [Task 2-a amendment — documented in worklog.md] Current simulation
+     * instant. The ENGINE advances this field at every event before calling
+     * into the kernel. Synchronization calls that block or wake tasks
+     * (mrt_mutex_lock/unlock, sem, msgq, evflags) take no `now` parameter,
+     * yet must perform validated state transitions with correct time
+     * accounting — they stamp those transitions with k->now. If the engine
+     * never touches this field it stays 0 and sync-related accounting
+     * reads 0 (graceful degradation, never a crash). */
+    mrt_time_t now;
+
     /* monotone FIFO sequence for enqueue tie-breaks */
     mrt_seq_t  next_seq;
 

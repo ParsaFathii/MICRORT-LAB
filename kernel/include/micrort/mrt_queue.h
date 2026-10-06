@@ -25,8 +25,11 @@ typedef struct mrt_readyq {
 
 void mrt_readyq_init(mrt_readyq_t *q);
 
-/* Returns 1 when the queue must be re-ordered after a priority change.
- * Push assigns enqueue_seq via the kernel's monotone counter. */
+/* Push a task. Returns MRT_OK, MRT_ERR_NOT_FOUND (unknown id),
+ * MRT_ERR_DUPLICATE (task already queued — defensive) or MRT_ERR_FULL.
+ * Push assigns a fresh enqueue_seq from the kernel's monotone counter
+ * (the queue stays ordered by effective priority; use reposition after a
+ * priority change). */
 mrt_result_t mrt_readyq_push(void *kernel, mrt_task_id_t id);
 
 /* Pop highest priority task; MRT_TASK_ID_NONE if empty. */

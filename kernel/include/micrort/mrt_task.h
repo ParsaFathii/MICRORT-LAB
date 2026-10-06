@@ -39,6 +39,7 @@ typedef struct mrt_task {
     mrt_time_t     blocked_total;    /* BLOCKED time (resource waits)   */
     mrt_time_t     waiting_total;    /* WAITING time (I/O)              */
     mrt_time_t     sleeping_total;   /* SLEEPING time                   */
+    mrt_time_t     state_entered_at; /* when current state was entered  */
     mrt_time_t     last_ready_at;    /* when it entered READY last      */
     mrt_time_t     first_dispatch;   /* 0 + dispatched_once flag        */
     uint8_t        dispatched_once;
@@ -60,7 +61,9 @@ typedef struct mrt_task {
 /* Registers a task and returns its handle. Name is copied (truncated at
  * MRT_MAX_NAME-1). The task starts in state MRT_TASK_UNUSED until
  * released via mrt_task_release(). Returns:
- *   MRT_OK, MRT_ERR_FULL, MRT_ERR_INVALID_ARG. */
+ *   MRT_OK, MRT_ERR_FULL, MRT_ERR_INVALID_ARG,
+ *   MRT_ERR_DUPLICATE (name already registered; comparison uses the
+ *   truncated names, so ids sharing a 31-char prefix collide). */
 mrt_result_t mrt_task_register(void            *kernel,
                                const char      *name,
                                mrt_task_kind_t  kind,
@@ -88,7 +91,13 @@ mrt_task_id_t mrt_task_find(void *kernel, const char *name);
  *   WAITING    -> READY              (I/O completed)
  *   SLEEPING   -> READY              (timer expired)
  * Any other edge returns MRT_ERR_BAD_STATE and changes nothing.
- * Accounting counters (ready_wait_total etc.) are updated here. */
+ * Accounting counters (ready_wait_total etc.) are updated here.
+ *
+ * Job recycling (2-a note): TERMINATED is terminal in this machine. For
+ * the NEXT job release of a periodic/sporadic task the engine resets
+ * t->state to MRT_TASK_UNUSED directly (safe: neither TERMINATED nor
+ * UNUSED has exit accounting) and then calls mrt_task_set_state(
+ * UNUSED->READY), which increments jobs_released. */
 mrt_result_t mrt_task_set_state(void *kernel, mrt_task_id_t id,
                                 mrt_task_state_t new_state, mrt_time_t now);
 

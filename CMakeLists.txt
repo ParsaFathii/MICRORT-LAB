@@ -17,7 +17,7 @@ endif()
 # Deterministic builds: no RPATH mush, no timestamps in archives
 set(CMAKE_SKIP_RPATH ON)
 
+enable_testing()
+
 add_subdirectory(kernel)
 add_subdirectory(engine)
-
-enable_testing()
