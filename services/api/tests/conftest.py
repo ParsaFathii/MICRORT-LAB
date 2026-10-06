@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,16 @@ from app.config import BASE_DIR, Settings
 from app.engine import EngineRunner
 from app.main import create_app
 
-ENGINE_BIN = BASE_DIR.parent.parent / "engine" / "build" / "engine" / "micrort-engine"
+
+def _resolve_engine_bin() -> Path:
+    """CI and developers may point MICRORT_ENGINE_BIN at any build location."""
+    override = os.environ.get("MICRORT_ENGINE_BIN")
+    if override:
+        return Path(override).expanduser().resolve()
+    return BASE_DIR.parent.parent / "engine" / "build" / "engine" / "micrort-engine"
+
+
+ENGINE_BIN = _resolve_engine_bin()
 EXPERIMENTS_DIR = BASE_DIR.parent.parent / "experiments"
 
 

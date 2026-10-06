@@ -178,7 +178,8 @@ function VariantEditor({
 }: {
   variants: VariantRow[];
   onChange: (rows: VariantRow[]) => void;
-  experimentsHaveMemory: boolean;
+  /** true/false when a base experiment is selected; null when using inline JSON. */
+  experimentsHaveMemory: boolean | null;
 }) {
   const update = (key: number, patch: Partial<VariantRow>) => {
     onChange(variants.map((v) => (v.key === key ? { ...v, ...patch } : v)));
@@ -326,7 +327,7 @@ function fmtMetric(v: number | null | undefined): string {
 
 function ComparisonResultPanel({ record }: { record: ComparisonRecord }) {
   const results = record.results;
-  const metricKeys = React.useMemo(() => {
+  const metricKeys = React.useMemo<string[]>(() => {
     const present = new Set<string>();
     for (const v of results.variants) {
       for (const k of Object.keys(v.metrics)) {
@@ -573,7 +574,7 @@ export function CompareView() {
   const runPayload = (): CreateComparisonPayload | string => {
     if (variants.length < 2) return "Need at least 2 variants.";
     if (variants.some((v) => v.label.trim() === "")) return "Every variant needs a label.";
-    let base: { experimentId?: string; config?: unknown };
+    let base: { experimentId?: string; config?: Record<string, unknown> };
     if (baseMode === "experiment") {
       if (!experimentId) return "Pick a base experiment.";
       base = { experimentId };
@@ -583,7 +584,7 @@ export function CompareView() {
         if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
           return "Config JSON must be an object.";
         }
-        base = { config: parsed };
+        base = { config: parsed as Record<string, unknown> };
       } catch (err) {
         return `Invalid JSON: ${err instanceof Error ? err.message : "parse error"}`;
       }

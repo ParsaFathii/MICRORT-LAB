@@ -65,12 +65,11 @@ jobs:
     needs: native
     steps:
       - uses: actions/checkout@v4
-      - name: Install toolchain (build the engine for integration tests)
+      - name: Build native engine (official script, engine/build layout)
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake g++
-          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-          cmake --build build -j"$(nproc)"
+          ./scripts/build-native.sh
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -83,7 +82,7 @@ jobs:
       - name: Tests (real engine binary)
         working-directory: services/api
         env:
-          MICRORT_ENGINE_BIN: ${{ github.workspace }}/build/engine/micrort-engine
+          MICRORT_ENGINE_BIN: ${{ github.workspace }}/engine/build/engine/micrort-engine
         run: python -m pytest -q
 
   web:

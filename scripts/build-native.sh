@@ -5,4 +5,4 @@ set -euo pipefail
 BUILD_DIR="${1:-engine/build}"
 cmake -S . -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$BUILD_DIR" -j"$(nproc 2>/dev/null || echo 2)"
-echo "Binary: $BUILD_DIR/micrort-engine"
+echo "Binary: $BUILD_DIR/engine/micrort-engine"
