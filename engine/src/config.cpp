@@ -287,8 +287,8 @@ bool parseTask(const json& j, TaskCfg& out, const std::string& path,
     out.name = out.id; // optional display name defaults to id
     getString(j, "name", out.name, path, errs);
 
-    std::string kindStr = "aperiodic";
-    if (reqString(j, "kind", kindStr, path, errs)) {
+    std::string kindStr = "aperiodic"; // kind is optional; default aperiodic
+    if (getString(j, "kind", kindStr, path, errs) == Field::Ok) {
         if (!taskKindFromString(kindStr, out.kind)) {
             fail(errs, path, "unknown kind '" + kindStr +
                  "' (valid: aperiodic, periodic, sporadic)");

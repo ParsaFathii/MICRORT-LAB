@@ -1,0 +1,19 @@
+{
+  "schema": "micrort-config/1",
+  "name": "rr-quantum-comparison",
+  "description": "Round Robin quantum sensitivity: four CPU bursts of different lengths under rr. The analysis layer clones this workload with quantum 2 / 4 / 16 to compare response spread and context-switch counts.",
+  "seed": 0,
+  "duration": 120,
+  "contextSwitchCost": 1,
+  "scheduler": { "type": "rr", "quantum": 4 },
+  "tasks": [
+    { "id": "T1", "kind": "aperiodic", "priority": 0, "arrival": 0,
+      "steps": [ { "op": "cpu", "d": 14 } ] },
+    { "id": "T2", "kind": "aperiodic", "priority": 0, "arrival": 0,
+      "steps": [ { "op": "cpu", "d": 6 } ] },
+    { "id": "T3", "kind": "aperiodic", "priority": 0, "arrival": 2,
+      "steps": [ { "op": "cpu", "d": 9 }, { "op": "io", "d": 6, "dev": "disk" }, { "op": "cpu", "d": 3 } ] },
+    { "id": "T4", "kind": "aperiodic", "priority": 0, "arrival": 4,
+      "steps": [ { "op": "cpu", "d": 5 } ] }
+  ]
+}

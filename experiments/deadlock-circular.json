@@ -1,0 +1,28 @@
+{
+  "schema": "micrort-config/1",
+  "name": "deadlock-circular",
+  "description": "Circular wait under Round Robin (quantum 1): A locks M1 then needs M2, B locks M2 then needs M1. The interleaving lets both hold their first mutex; the resource-allocation graph closes the cycle A -> M2 -> B -> M1 -> A and the detector reports it with the participating tasks and resources. Both tasks stay BLOCKED to the end of the horizon.",
+  "seed": 0,
+  "duration": 60,
+  "scheduler": { "type": "rr", "quantum": 1 },
+  "resources": [
+    { "id": "M1", "type": "mutex", "protocol": "none" },
+    { "id": "M2", "type": "mutex", "protocol": "none" }
+  ],
+  "tasks": [
+    { "id": "A", "kind": "aperiodic", "priority": 0, "arrival": 0,
+      "steps": [
+        { "op": "lock", "res": "M1" },
+        { "op": "cpu", "d": 2 },
+        { "op": "lock", "res": "M2" },
+        { "op": "cpu", "d": 2 }
+      ] },
+    { "id": "B", "kind": "aperiodic", "priority": 0, "arrival": 0,
+      "steps": [
+        { "op": "lock", "res": "M2" },
+        { "op": "cpu", "d": 2 },
+        { "op": "lock", "res": "M1" },
+        { "op": "cpu", "d": 2 }
+      ] }
+  ]
+}

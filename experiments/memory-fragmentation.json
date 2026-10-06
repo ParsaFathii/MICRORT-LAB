@@ -1,0 +1,29 @@
+{
+  "schema": "micrort-config/1",
+  "name": "memory-fragmentation",
+  "description": "First-fit fragmentation stress: a pattern of mixed allocations and frees carves the 512-byte region into small holes until a 96-byte request fails. The analysis layer re-runs the identical pattern with best_fit to show how the failure and the fragmentation series differ.",
+  "seed": 0,
+  "duration": 200,
+  "scheduler": { "type": "fifo" },
+  "memory": { "model": "region", "total": 512, "policy": "first_fit" },
+  "tasks": [
+    { "id": "Churner", "kind": "periodic", "priority": 0, "arrival": 0, "period": 20,
+      "steps": [
+        { "op": "alloc", "size": 64,  "tag": "keep" },
+        { "op": "alloc", "size": 32,  "tag": "small1" },
+        { "op": "alloc", "size": 128, "tag": "big" },
+        { "op": "free",  "tag": "small1" },
+        { "op": "alloc", "size": 48,  "tag": "small2" },
+        { "op": "free",  "tag": "big" },
+        { "op": "alloc", "size": 96,  "tag": "late" },
+        { "op": "free",  "tag": "small2" },
+        { "op": "cpu", "d": 2 }
+      ] },
+    { "id": "BigClient", "kind": "periodic", "priority": 0, "arrival": 10, "period": 40,
+      "steps": [
+        { "op": "alloc", "size": 256, "tag": "bulk" },
+        { "op": "cpu", "d": 3 },
+        { "op": "free",  "tag": "bulk" }
+      ] }
+  ]
+}

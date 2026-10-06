@@ -25,6 +25,7 @@
 #include <micrort/rng.hpp>
 #include <micrort/scheduler.hpp>
 #include <micrort/sha256.hpp>
+#include <micrort/simulation.hpp>
 
 namespace micrort {
 namespace {
@@ -233,12 +234,12 @@ int cmdRun(int argc, char** argv) {
         cfg.seed = static_cast<std::uint64_t>(seedOverride);
     }
 
-    // Stage 1: stub result document (agent 2-b2 replaces this).
-    const std::string result =
-        "{\"schema\":\"micrort-result/1\",\"status\":\"stub\","
-        "\"note\":\"engine core arrives in stage 2\"}";
+    // Execute the deterministic discrete-event simulation (stage 2-b2).
+    Simulation sim(cfg, dom);
+    const json result = sim.run();
+    const std::string resultText = result.dump();
     if (outPath == "-") {
-        std::cout << result << "\n";
+        std::cout << resultText << "\n";
     } else {
         std::ofstream f(outPath, std::ios::out | std::ios::binary);
         if (!f.is_open()) {
@@ -246,11 +247,12 @@ int cmdRun(int argc, char** argv) {
                       << "\n";
             return 3;
         }
-        f << result << "\n";
+        f << resultText << "\n";
     }
-    std::cerr << "run: stub result for config '" << cfg.name << "' (validated: "
-              << cfg.tasks.size() << " tasks, " << cfg.resources.size()
-              << " resources)\n";
+    std::cerr << "run: " << cfg.name << " status=" << result.value("status", "?")
+              << " events=" << result.value("metrics", json::object())
+                                  .value("totalEvents", 0)
+              << " ticks=" << result.value("simulatedUntil", 0) << "\n";
     return 0;
 }
 

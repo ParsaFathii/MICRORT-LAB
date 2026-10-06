@@ -1,0 +1,80 @@
+{
+  "schema": "micrort-config/1",
+  "name": "priority-inversion",
+  "description": "Classic priority inversion WITHOUT inheritance: Low holds mutex SHARED; High blocks on it; Medium (needing no lock) preempts Low and runs to completion, inflating High's response time.",
+  "seed": 0,
+  "duration": 120,
+  "scheduler": {
+    "type": "priority_p"
+  },
+  "resources": [
+    {
+      "id": "SHARED",
+      "type": "mutex",
+      "protocol": "none"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "Low",
+      "kind": "aperiodic",
+      "priority": 1,
+      "arrival": 0,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 1
+        },
+        {
+          "op": "lock",
+          "res": "SHARED"
+        },
+        {
+          "op": "cpu",
+          "d": 12
+        },
+        {
+          "op": "unlock",
+          "res": "SHARED"
+        }
+      ]
+    },
+    {
+      "id": "Medium",
+      "kind": "periodic",
+      "priority": 5,
+      "arrival": 5,
+      "period": 40,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 25
+        }
+      ]
+    },
+    {
+      "id": "High",
+      "kind": "aperiodic",
+      "priority": 9,
+      "arrival": 4,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 1
+        },
+        {
+          "op": "lock",
+          "res": "SHARED"
+        },
+        {
+          "op": "cpu",
+          "d": 3
+        },
+        {
+          "op": "unlock",
+          "res": "SHARED"
+        }
+      ]
+    }
+  ]
+}

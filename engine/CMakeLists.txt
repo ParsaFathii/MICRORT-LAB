@@ -8,13 +8,16 @@
 #   micrort-engine      : the CLI executable
 #   test_*              : in-process unit tests (engine/tests, harness.hpp)
 
-# ---- engine core library (stage 2: append simulation sources here) ----
+# ---- engine core library ----
 add_library(micrort_engine_core STATIC
     src/sha256.cpp
     src/rng.cpp
     src/config.cpp
     src/scheduler.cpp
     src/cli.cpp
+    src/trace.cpp
+    src/simulation.cpp
+    src/result.cpp
 )
 target_include_directories(micrort_engine_core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -26,11 +29,14 @@ target_link_libraries(micrort_engine_core PUBLIC micrort_kernel)
 add_executable(micrort-engine src/main.cpp)
 target_link_libraries(micrort-engine PRIVATE micrort_engine_core)
 
-# ---- unit tests (stage 1: config / scheduler / cli; extend the list) ----
+# ---- unit tests ----
 set(ENGINE_TESTS
     test_config
     test_scheduler
     test_cli
+    test_simulation
+    test_trace_gantt
+    test_metrics
 )
 foreach(t ${ENGINE_TESTS})
     add_executable(${t} tests/${t}.cpp)

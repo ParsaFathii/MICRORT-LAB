@@ -1,0 +1,63 @@
+{
+  "schema": "micrort-config/1",
+  "name": "priority-starvation",
+  "description": "A low-priority background task cannot win the CPU while periodic high-priority load saturates it. The analysis layer re-runs this with aging enabled to show the rescue.",
+  "seed": 0,
+  "duration": 250,
+  "scheduler": {
+    "type": "priority_p"
+  },
+  "tasks": [
+    {
+      "id": "BG",
+      "kind": "aperiodic",
+      "priority": 1,
+      "arrival": 1,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 10
+        }
+      ]
+    },
+    {
+      "id": "HOT1",
+      "kind": "periodic",
+      "priority": 20,
+      "arrival": 0,
+      "period": 10,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 4
+        }
+      ]
+    },
+    {
+      "id": "HOT2",
+      "kind": "periodic",
+      "priority": 18,
+      "arrival": 0,
+      "period": 12,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 4
+        }
+      ]
+    },
+    {
+      "id": "HOT3",
+      "kind": "periodic",
+      "priority": 16,
+      "arrival": 0,
+      "period": 12,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 3
+        }
+      ]
+    }
+  ]
+}

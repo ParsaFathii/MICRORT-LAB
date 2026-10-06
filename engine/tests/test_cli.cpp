@@ -161,9 +161,10 @@ int main() {
         const TempFile f(kFixtureSmoke);
         std::string out, err;
         CHECK_EQ(run({"run", "--config", f.path}, out, err), 0);
-        CHECK_STREQ(out, "{\"schema\":\"micrort-result/1\",\"status\":\"stub\","
-                         "\"note\":\"engine core arrives in stage 2\"}\n");
-        CHECK_TRUE(contains(err, "stub result")); // one-line stderr summary
+        CHECK_TRUE(contains(out, "\"schema\":\"micrort-result/1\""));
+        CHECK_TRUE(contains(out, "\"status\":\"completed\""));
+        CHECK_TRUE(contains(out, "\"metrics\""));
+        CHECK_TRUE(contains(err, "run: smoke")); // one-line stderr summary
     }
     TEST("run: invalid config exits 2 with validation error on stderr");
     {
@@ -189,14 +190,15 @@ int main() {
         std::string content((std::istreambuf_iterator<char>(f)),
                             std::istreambuf_iterator<char>());
         std::remove(outPath.c_str());
-        CHECK_TRUE(contains(content, "\"status\":\"stub\""));
+        CHECK_TRUE(contains(content, "\"status\":\"completed\""));
+        CHECK_TRUE(contains(content, "\"trace\":"));
     }
     TEST("run: --seed accepted (non-negative)");
     {
         const TempFile f(kFixtureSmoke);
         std::string out, err;
         CHECK_EQ(run({"run", "--config", f.path, "--seed", "99"}, out, err), 0);
-        CHECK_TRUE(contains(out, "stub"));
+        CHECK_TRUE(contains(out, "\"status\":\"completed\""));
     }
     TEST("run: negative --seed is a usage error");
     {

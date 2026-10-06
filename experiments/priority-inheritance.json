@@ -1,0 +1,80 @@
+{
+  "schema": "micrort-config/1",
+  "name": "priority-inheritance",
+  "description": "The SAME scenario as priority-inversion.json but the mutex uses priority inheritance: when High blocks on SHARED, Low inherits priority 9, Medium can no longer preempt it, and High completes far sooner. Compare the two results' LOCK_INHERIT events and High blocked time.",
+  "seed": 0,
+  "duration": 120,
+  "scheduler": {
+    "type": "priority_p"
+  },
+  "resources": [
+    {
+      "id": "SHARED",
+      "type": "mutex",
+      "protocol": "inherit"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "Low",
+      "kind": "aperiodic",
+      "priority": 1,
+      "arrival": 0,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 1
+        },
+        {
+          "op": "lock",
+          "res": "SHARED"
+        },
+        {
+          "op": "cpu",
+          "d": 12
+        },
+        {
+          "op": "unlock",
+          "res": "SHARED"
+        }
+      ]
+    },
+    {
+      "id": "Medium",
+      "kind": "periodic",
+      "priority": 5,
+      "arrival": 5,
+      "period": 40,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 25
+        }
+      ]
+    },
+    {
+      "id": "High",
+      "kind": "aperiodic",
+      "priority": 9,
+      "arrival": 4,
+      "steps": [
+        {
+          "op": "cpu",
+          "d": 1
+        },
+        {
+          "op": "lock",
+          "res": "SHARED"
+        },
+        {
+          "op": "cpu",
+          "d": 3
+        },
+        {
+          "op": "unlock",
+          "res": "SHARED"
+        }
+      ]
+    }
+  ]
+}

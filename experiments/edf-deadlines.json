@@ -1,0 +1,19 @@
+{
+  "schema": "micrort-config/1",
+  "name": "edf-deadlines",
+  "description": "EDF meeting every deadline at ~85% utilization where a fixed-priority assignment would miss some: three periodic tasks with harmonic-friendly periods (10/15/30) and tight relative deadlines. The analysis layer compares this against priority_p on the same workload.",
+  "seed": 0,
+  "duration": 120,
+  "scheduler": { "type": "edf" },
+  "tasks": [
+    { "id": "CONTROL", "kind": "periodic", "priority": 3, "arrival": 0, "period": 10,
+      "relativeDeadline": 9,
+      "steps": [ { "op": "cpu", "d": 4 } ] },
+    { "id": "SENSING", "kind": "periodic", "priority": 2, "arrival": 0, "period": 15,
+      "relativeDeadline": 14,
+      "steps": [ { "op": "cpu", "d": 5 }, { "op": "io", "d": 2, "dev": "adc" }, { "op": "cpu", "d": 1 } ] },
+    { "id": "TELEMETRY", "kind": "periodic", "priority": 1, "arrival": 0, "period": 30,
+      "relativeDeadline": 28,
+      "steps": [ { "op": "cpu", "d": 3 } ] }
+  ]
+}

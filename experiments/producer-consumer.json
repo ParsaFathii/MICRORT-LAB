@@ -1,0 +1,41 @@
+{
+  "schema": "micrort-config/1",
+  "name": "producer-consumer",
+  "description": "Bounded-buffer producer/consumer over a message queue of capacity 2: three producers and two consumers exchange payloads; senders block when the buffer fills and receivers block when it drains. The trace shows the alternating wake pattern and preserved FIFO payload order.",
+  "seed": 0,
+  "duration": 200,
+  "scheduler": { "type": "rr", "quantum": 3 },
+  "resources": [
+    { "id": "BUFFER", "type": "msgq", "capacity": 2 }
+  ],
+  "tasks": [
+    { "id": "Producer1", "kind": "periodic", "priority": 0, "arrival": 0, "period": 18,
+      "steps": [
+        { "op": "cpu", "d": 1 },
+        { "op": "send", "res": "BUFFER", "msg": 101 },
+        { "op": "cpu", "d": 1 }
+      ] },
+    { "id": "Producer2", "kind": "periodic", "priority": 0, "arrival": 2, "period": 18,
+      "steps": [
+        { "op": "cpu", "d": 1 },
+        { "op": "send", "res": "BUFFER", "msg": 202 },
+        { "op": "cpu", "d": 1 }
+      ] },
+    { "id": "Producer3", "kind": "aperiodic", "priority": 0, "arrival": 4,
+      "steps": [
+        { "op": "send", "res": "BUFFER", "msg": 303 },
+        { "op": "send", "res": "BUFFER", "msg": 304 },
+        { "op": "cpu", "d": 2 }
+      ] },
+    { "id": "Consumer1", "kind": "periodic", "priority": 0, "arrival": 1, "period": 14,
+      "steps": [
+        { "op": "recv", "res": "BUFFER" },
+        { "op": "cpu", "d": 3 }
+      ] },
+    { "id": "Consumer2", "kind": "periodic", "priority": 0, "arrival": 3, "period": 14,
+      "steps": [
+        { "op": "recv", "res": "BUFFER" },
+        { "op": "cpu", "d": 4 }
+      ] }
+  ]
+}

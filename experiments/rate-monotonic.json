@@ -1,0 +1,19 @@
+{
+  "schema": "micrort-config/1",
+  "name": "rate-monotonic",
+  "description": "Rate Monotonic on three periodic tasks with utilization U = 4/12 + 3/24 + 5/48 = 0.5625, below the 3-task Liu & Layland bound n(2^(1/n)-1) = 0.7798. RM assigns priorities from periods (shorter = more urgent); every job meets its deadline. The analysis layer also reports the theoretical bound next to the measured misses.",
+  "seed": 0,
+  "duration": 96,
+  "scheduler": { "type": "rm" },
+  "tasks": [
+    { "id": "FAST", "kind": "periodic", "priority": 0, "arrival": 0, "period": 12,
+      "relativeDeadline": 12,
+      "steps": [ { "op": "cpu", "d": 4 } ] },
+    { "id": "MEDIUM", "kind": "periodic", "priority": 0, "arrival": 0, "period": 24,
+      "relativeDeadline": 24,
+      "steps": [ { "op": "cpu", "d": 3 } ] },
+    { "id": "SLOW", "kind": "periodic", "priority": 0, "arrival": 0, "period": 48,
+      "relativeDeadline": 48,
+      "steps": [ { "op": "cpu", "d": 5 } ] }
+  ]
+}
