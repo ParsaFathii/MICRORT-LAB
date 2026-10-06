@@ -23,8 +23,16 @@ import type { ViewId } from "@/store/workstation";
 
 export type { ViewId };
 
+import { CompareView } from "@/components/views/CompareView";
+import { DeadlockView } from "@/components/views/DeadlockView";
+import { DocsView } from "@/components/views/DocsView";
 import { LiveView } from "@/components/views/LiveView";
+import { MemoryView } from "@/components/views/MemoryView";
+import { MetricsView } from "@/components/views/MetricsView";
+import { ReportsView } from "@/components/views/ReportsView";
+import { ResourcesView } from "@/components/views/ResourcesView";
 import { TimelineView } from "@/components/views/TimelineView";
+import { TraceView } from "@/components/views/TraceView";
 import { WorkbenchView } from "@/components/views/WorkbenchView";
 
 export interface ViewMeta {
@@ -48,40 +56,18 @@ export const VIEW_META: Record<ViewId, ViewMeta> = {
   docs: { num: "11", label: "Docs" },
 };
 
-/** Placeholder panel for views that stage 2 replaces. */
-function comingOnline(view: ViewId): ComponentType {
-  const meta = VIEW_META[view];
-  function ComingOnline() {
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-lg border border-line bg-panel p-6 text-center">
-          <p className="font-mono text-[10px] tracking-widest text-ink-dim">
-            VIEW {meta.num}
-          </p>
-          <h2 className="mt-2 font-mono text-sm text-ink">{meta.label}</h2>
-          <p className="mt-3 text-xs text-ink-dim">
-            Coming online in a later stage. The workstation shell, store and
-            data layer are already wired for this view.
-          </p>
-        </div>
-      </div>
-    );
-  }
-  return ComingOnline;
-}
-
 export const VIEWS: Record<ViewId, ComponentType> = {
   workbench: WorkbenchView,
   timeline: TimelineView,
   live: LiveView,
-  trace: comingOnline("trace"),
-  resources: comingOnline("resources"),
-  deadlock: comingOnline("deadlock"),
-  memory: comingOnline("memory"),
-  metrics: comingOnline("metrics"),
-  compare: comingOnline("compare"),
-  reports: comingOnline("reports"),
-  docs: comingOnline("docs"),
+  trace: TraceView,
+  resources: ResourcesView,
+  deadlock: DeadlockView,
+  memory: MemoryView,
+  metrics: MetricsView,
+  compare: CompareView,
+  reports: ReportsView,
+  docs: DocsView,
 };
 
 /** Shared empty state for views that need a loaded simulation. */

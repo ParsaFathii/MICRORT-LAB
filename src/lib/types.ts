@@ -211,7 +211,13 @@ export interface ResourceResult {
 
 export interface DeadlockRec {
   t: number;
-  cycle: string[];
+  /**
+   * Engine encoding: alternating indices — even positions are task indices
+   * (config.tasks order), odd positions are resource indices
+   * (config.resources order), e.g. [0,1,1,0] = A → M2 → B → M1.
+   * (The DEADLOCK trace-event detail carries the resolved id names.)
+   */
+  cycle: number[];
   tasks: string[];
   resources: string[];
 }
@@ -354,6 +360,246 @@ export interface HealthResponse {
     cachedForSeconds?: number;
   };
   counts?: Record<string, number>;
+}
+
+/* ---------------------------------------------------------------------------
+ * Comparisons (POST /api/v1/comparisons — variants deep-merged over base)
+ * ------------------------------------------------------------------------- */
+
+/** variant spec as sent to the API (deep-merged over the base config) */
+export interface ComparisonVariantInput {
+  label: string;
+  scheduler?: SchedulerCfg;
+  memory?: Partial<MemoryCfg>;
+  aging?: AgingCfg;
+}
+
+export interface CreateComparisonPayload {
+  name?: string;
+  /** base = experiment id XOR raw config object */
+  experimentId?: string;
+  config?: ExperimentConfig | Record<string, unknown>;
+  variants: ComparisonVariantInput[];
+}
+
+/** variant spec as stored on the comparison record */
+export interface ComparisonVariantSpec {
+  label: string;
+  scheduler?: SchedulerCfg;
+  memory?: Partial<MemoryCfg> | null;
+  aging?: AgingCfg | boolean | null;
+}
+
+/** metric subset the comparison layer computes per variant */
+export interface ComparisonMetrics {
+  avgWaiting?: number | null;
+  avgTurnaround?: number | null;
+  avgResponse?: number | null;
+  throughput?: number | null;
+  cpuUtilization?: number | null;
+  ctxSwitches?: number | null;
+  preemptions?: number | null;
+  deadlineMisses?: number | null;
+  completedJobs?: number | null;
+  simulatedUntil?: number | null;
+  [metric: string]: number | null | undefined;
+}
+
+export interface ComparisonVariantResult {
+  label: string;
+  scheduler: string;
+  status: string;
+  configHash: string | null;
+  metrics: ComparisonMetrics;
+  starvedTaskIds: string[];
+  aging: boolean;
+  error?: string | null;
+}
+
+export interface BestPerMetricEntry {
+  label: string;
+  value: number;
+  direction: "lower" | "higher";
+}
+
+export interface ComparisonDeltaRow {
+  label: string;
+  metrics: Record<string, number>;
+}
+
+export interface ComparisonResults {
+  variants: ComparisonVariantResult[];
+  bestPerMetric: Record<string, BestPerMetricEntry>;
+  deltasVsFirst: ComparisonDeltaRow[];
+}
+
+export interface ComparisonRecord {
+  id: string;
+  name: string;
+  baseConfig: ExperimentConfig;
+  variants: ComparisonVariantSpec[];
+  results: ComparisonResults;
+  createdAt: string;
+  /** list summaries carry these instead of full results */
+  variantCount?: number;
+  labels?: string[];
+}
+
+/** shape of one row in GET /api/v1/comparisons (summary list) */
+export interface ComparisonSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  variantCount: number;
+  labels: string[];
+  bestPerMetric?: Record<string, BestPerMetricEntry>;
+}
+
+/* ---------------------------------------------------------------------------
+ * Reports (stored markdown/csv/json documents)
+ * ------------------------------------------------------------------------- */
+
+export type ReportKind = "simulation" | "comparison";
+export type ReportFormat = "markdown" | "csv" | "json";
+
+export interface ReportRecord {
+  id: string;
+  kind: ReportKind | string;
+  refId: string;
+  format: ReportFormat | string;
+  size: number;
+  createdAt: string;
+}
+
+export interface ReportRecordWithContent extends ReportRecord {
+  content: string;
+}
+
+/** GET /simulations/{id}/report?format=json — full export document */
+export interface SimulationReportJson {
+  config: unknown;
+  result: unknown;
+  analysis: AnalysisResult | null;
+}
+
+/* ---------------------------------------------------------------------------
+ * Simulation analysis endpoints (metrics cross-check, trace, RT analysis)
+ * ------------------------------------------------------------------------- */
+
+/** GET /simulations/{id}/metrics — engine vs Python-recomputed cross-check */
+export interface MetricsCheck {
+  id: string;
+  status: string;
+  engine: Record<string, number | null>;
+  recomputed: Record<string, number | null>;
+  deltas: Record<string, number | null>;
+  match: boolean;
+  tolerance: number;
+}
+
+/** GET /simulations/{id}/trace — filtered + paginated trace events */
+export interface TraceListResponse {
+  id: string;
+  items: TraceEvent[];
+  total: number;
+  limit: number;
+  offset: number;
+  unfilteredTotal: number;
+}
+
+export interface RtTheoreticalTask {
+  id: string;
+  wcet: number;
+  period: number;
+  relativeDeadline?: number | null;
+  utilization: number;
+}
+
+export interface HyperbolicBound {
+  product: number;
+  limit: number;
+  schedulable: boolean;
+}
+
+export interface RtTheoretical {
+  periodicTaskCount: number;
+  tasks: RtTheoreticalTask[];
+  totalUtilization: number;
+  liuLaylandBound: number;
+  liuLaylandSchedulable: boolean;
+  hyperbolicBound?: HyperbolicBound | null;
+  boundAppliesTo?: string | null;
+  note?: string | null;
+}
+
+export interface RtMeasuredTask {
+  id: string;
+  jobsReleased: number;
+  jobsCompleted: number;
+  deadlineMisses: number;
+  cpuTime: number;
+  starved: boolean;
+}
+
+export interface RtMeasured {
+  scheduler: string;
+  simulatedUntil: number;
+  deadlineMisses: number;
+  perTask: RtMeasuredTask[];
+  completedJobs: number;
+  releasedJobs: number;
+  completionRate: number;
+  cpuUtilization: number;
+  starvedTasks: string[];
+}
+
+export interface RtAnalysis {
+  theoretical: RtTheoretical;
+  measured: RtMeasured;
+  verdict?: string | null;
+}
+
+export interface StarvationPerTask {
+  id: string;
+  readyWaitTotal: number;
+  cpuTime: number;
+  waitToCpuRatio: number;
+  jobsReleased: number;
+  jobsCompleted: number;
+  engineStarved: boolean;
+  recomputedStarved: boolean;
+}
+
+export interface StarvationReport {
+  threshold: number;
+  cpuRatio: number;
+  heuristic: string;
+  starvedTasks: string[];
+  starvedCount: number;
+  maxReadyWait: { task: string; readyWaitTotal: number } | null;
+  perTask: StarvationPerTask[];
+}
+
+export interface FragmentationSummary {
+  enabled: boolean;
+  model?: string | null;
+  policy?: string | null;
+  total?: number | null;
+  eventCount?: number | null;
+  peakUsage?: number | null;
+  allocFailures?: number | null;
+  failureCount?: number | null;
+  leakCount?: number | null;
+  fragmentationAvg?: number | null;
+  fragmentationMax?: number | null;
+  finalFree?: { free: number; largest: number; fragmentation: number } | null;
+}
+
+/** GET /simulations/{id}/analysis */
+export interface AnalysisResult {
+  rt: RtAnalysis | null;
+  starvation: StarvationReport | null;
+  fragmentation: FragmentationSummary | null;
 }
 
 /* ---------------------------------------------------------------------------

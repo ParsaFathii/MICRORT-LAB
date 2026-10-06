@@ -9,10 +9,19 @@
 
 import {
   ApiError,
+  type AnalysisResult,
+  type ComparisonRecord,
+  type ComparisonSummary,
+  type CreateComparisonPayload,
   type ExperimentRecord,
   type HealthResponse,
   type ListResponse,
+  type MetricsCheck,
+  type ReportRecord,
+  type ReportRecordWithContent,
   type SimulationRecord,
+  type SimulationReportJson,
+  type TraceListResponse,
 } from "@/lib/types";
 
 const GATEWAY_MARKER = "XTransformPort";
@@ -106,10 +115,32 @@ async function request<T>(
   }
 }
 
+async function requestText(path: string): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let res: Response;
+  try {
+    res = await fetch(buildUrl(path), { method: "GET", signal: controller.signal });
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new ApiError(408, `Request timed out after ${TIMEOUT_MS / 1000}s (${path})`);
+    }
+    throw new ApiError(0, `Network error reaching the analysis service (${path})`);
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!res.ok) {
+    throw await readErrorBody(res);
+  }
+  return res.text();
+}
+
 export const api = {
   get: <T>(path: string) => request<T>(path, "GET"),
   post: <T>(path: string, body?: unknown) => request<T>(path, "POST", body ?? {}),
   del: <T>(path: string) => request<T>(path, "DELETE"),
+  /** for endpoints that return raw text/csv/markdown instead of JSON */
+  getText: (path: string) => requestText(path),
 };
 
 /* ---------------------------------------------------------------------------
@@ -154,6 +185,98 @@ export function createSimulation(payload: {
 
 export function deleteSimulation(id: string): Promise<unknown> {
   return api.del<unknown>(`/simulations/${encodeURIComponent(id)}`);
+}
+
+/* --- simulations: analysis / trace / report (stage 2) ------------------- */
+
+export interface TraceFilterOptions {
+  type?: string;
+  task?: string;
+  limit?: number;
+  offset?: number;
+}
+
+/** GET /api/v1/simulations/{id}/trace — filtered + paginated trace events. */
+export function getSimulationTrace(
+  id: string,
+  filters: TraceFilterOptions = {},
+): Promise<TraceListResponse> {
+  const params = new URLSearchParams();
+  if (filters.type) params.set("type", filters.type);
+  if (filters.task) params.set("task", filters.task);
+  params.set("limit", String(filters.limit ?? 1000));
+  params.set("offset", String(filters.offset ?? 0));
+  return api.get<TraceListResponse>(
+    `/simulations/${encodeURIComponent(id)}/trace?${params.toString()}`,
+  );
+}
+
+/** GET /api/v1/simulations/{id}/metrics — engine vs recompute cross-check. */
+export function getSimulationMetrics(id: string): Promise<MetricsCheck> {
+  return api.get<MetricsCheck>(`/simulations/${encodeURIComponent(id)}/metrics`);
+}
+
+/** GET /api/v1/simulations/{id}/analysis — RT / starvation / fragmentation. */
+export function getSimulationAnalysis(id: string): Promise<AnalysisResult> {
+  return api.get<AnalysisResult>(`/simulations/${encodeURIComponent(id)}/analysis`);
+}
+
+/**
+ * GET /api/v1/simulations/{id}/report?format=markdown|csv — raw text body
+ * (the endpoint also persists a report record in the library).
+ */
+export function getSimulationReport(
+  id: string,
+  format: "markdown" | "csv",
+): Promise<string> {
+  return api.getText(`/simulations/${encodeURIComponent(id)}/report?format=${format}`);
+}
+
+/** GET /api/v1/simulations/{id}/report?format=json — full export document. */
+export function getSimulationReportJson(id: string): Promise<SimulationReportJson> {
+  return api.get<SimulationReportJson>(
+    `/simulations/${encodeURIComponent(id)}/report?format=json`,
+  );
+}
+
+/* --- comparisons (stage 2) ------------------------------------------------ */
+
+export function listComparisons(limit = 50): Promise<ListResponse<ComparisonSummary>> {
+  return api.get<ListResponse<ComparisonSummary>>(`/comparisons?limit=${limit}`);
+}
+
+export function getComparison(id: string): Promise<ComparisonRecord> {
+  return api.get<ComparisonRecord>(`/comparisons/${encodeURIComponent(id)}`);
+}
+
+/**
+ * POST /api/v1/comparisons — runs every variant (deep-merged over the base
+ * config) and returns the full comparison record with results.
+ */
+export function createComparison(
+  payload: CreateComparisonPayload,
+): Promise<ComparisonRecord> {
+  return api.post<ComparisonRecord>("/comparisons", payload);
+}
+
+/** GET /api/v1/comparisons/{id}/report — markdown report (raw text body). */
+export function getComparisonReport(id: string): Promise<string> {
+  return api.getText(`/comparisons/${encodeURIComponent(id)}/report`);
+}
+
+/* --- stored reports (stage 2) ---------------------------------------------- */
+
+export function listReports(
+  simulationId?: string,
+  limit = 50,
+): Promise<ListResponse<ReportRecord>> {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (simulationId) params.set("simulationId", simulationId);
+  return api.get<ListResponse<ReportRecord>>(`/reports?${params.toString()}`);
+}
+
+export function getReport(id: string): Promise<ReportRecordWithContent> {
+  return api.get<ReportRecordWithContent>(`/reports/${encodeURIComponent(id)}`);
 }
 
 /** Format an ApiError for a toast message (message + up to 3 detail lines). */

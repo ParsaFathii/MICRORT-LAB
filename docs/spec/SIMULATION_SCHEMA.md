@@ -166,8 +166,11 @@ Notes:
                    "acquisitions": 3, "contentions": 1,
                    "holderAtEnd": null, "queueDepth": 0 } ],
 
-  "deadlocks": [ { "t": 61, "cycle": ["A", "M1", "B", "M2"],
+  "deadlocks": [ { "t": 61, "cycle": [0, 1, 1, 0],
                    "tasks": ["A", "B"], "resources": ["M1", "M2"] } ],
+  // cycle: alternating engine task INDEX / resource INDEX pairs starting
+  // and ending at a task index (e.g. [A0, M1_1, B1, M2_0...]); the
+  // tasks/resources arrays carry the readable id names in cycle order.
 
   "memory": {
     "model": "region", "total": 1024, "policy": "first_fit",
