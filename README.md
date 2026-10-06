@@ -47,6 +47,27 @@ run can be replayed, filtered, measured, cross-checked and compared. The cost of
 is fidelity to real hardware: context switches are a fixed tick cost, I/O is a pure delay,
 and there is one simulated CPU.
 
+## The workstation
+
+All screenshots below are from the running application (real experiment data, no mockups):
+
+| View | What it shows |
+| --- | --- |
+| ![Workbench](docs/assets/01-workbench.png) | Experiment library, config detail, run, simulation history |
+| ![Timeline](docs/assets/02-timeline-gantt.png) | Gantt timeline: state lanes, markers, cursor, inspector |
+| ![Live console](docs/assets/03-live-console.png) | Playback: task board, CPU state, streaming event feed |
+| ![Trace](docs/assets/04-trace-browser.png) | Full event trace with filters, search, CSV export |
+| ![Deadlock](docs/assets/05-deadlock-rag.png) | Resource-allocation graph with the detected cycle |
+| ![Memory](docs/assets/06-memory-map.png) | Memory map replayed at the cursor, fragmentation chart |
+| ![Metrics](docs/assets/07-metrics.png) | Metric tiles with Python cross-check, RT analysis |
+| ![Compare](docs/assets/08-compare.png) | Scheduler comparison matrix with best-per-metric |
+| ![Reports](docs/assets/09-reports.png) | Generated markdown/CSV/JSON reports |
+
+Original diagrams: [architecture](docs/assets/diagram-architecture.svg) ·
+[simulation flow](docs/assets/diagram-simulation-flow.svg) ·
+[task lifecycle](docs/assets/diagram-task-lifecycle.svg) ·
+[scheduler pipeline](docs/assets/diagram-scheduler-pipeline.svg).
+
 ## Architecture
 
 ```

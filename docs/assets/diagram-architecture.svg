@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+  <!-- MicroRT-Lab system architecture — original diagram, © 2026 Parsa Fathi (Apache-2.0) -->
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a8271"/>
+    </marker>
+  </defs>
+  <rect width="960" height="560" fill="#17140f"/>
+  <text x="480" y="36" text-anchor="middle" fill="#ede8dd" font-size="20" letter-spacing="2">MICRORT-LAB — LAYERED ARCHITECTURE</text>
+  <text x="480" y="54" text-anchor="middle" fill="#8a8271" font-size="11">each layer has one responsibility — the layers below never know about the ones above</text>
+
+  <!-- Layer 1: C kernel -->
+  <rect x="60" y="90" width="840" height="120" rx="10" fill="#201c15" stroke="#3a332a"/>
+  <text x="84" y="116" fill="#f5b642" font-size="13" font-weight="bold">C11 KERNEL</text>
+  <text x="84" y="134" fill="#8a8271" font-size="10">kernel/ · fixed-capacity, allocation-free, validated state machine</text>
+  <g fill="#201c15" stroke="#57503f">
+    <rect x="84" y="150" width="118" height="44" rx="6"/><rect x="212" y="150" width="118" height="44" rx="6"/>
+    <rect x="340" y="150" width="118" height="44" rx="6"/><rect x="468" y="150" width="118" height="44" rx="6"/>
+    <rect x="596" y="150" width="118" height="44" rx="6"/><rect x="724" y="150" width="118" height="44" rx="6"/>
+  </g>
+  <g fill="#ede8dd" font-size="10" text-anchor="middle">
+    <text x="143" y="168">task control</text><text x="143" y="182">blocks</text>
+    <text x="271" y="168">ready queue</text><text x="271" y="182">prio + FIFO</text>
+    <text x="399" y="168">mutex · sem</text><text x="399" y="182">msgq · evflags</text>
+    <text x="527" y="168">memory</text><text x="527" y="182">pool · region</text>
+    <text x="655" y="168">timers</text><text x="655" y="182">delta list</text>
+    <text x="783" y="168">statistics</text><text x="783" y="182">counters</text>
+  </g>
+
+  <line x1="480" y1="210" x2="480" y2="248" stroke="#8a8271" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="500" y="234" fill="#8a8271" font-size="10">drives kernel state</text>
+
+  <!-- Layer 2: C++ engine -->
+  <rect x="60" y="250" width="840" height="120" rx="10" fill="#201c15" stroke="#3a332a"/>
+  <text x="84" y="276" fill="#f5b642" font-size="13" font-weight="bold">C++20 SIMULATION ENGINE</text>
+  <text x="84" y="294" fill="#8a8271" font-size="10">engine/ · discrete-event loop, deterministic tie-breaking, CLI: micrort-engine</text>
+  <g fill="#201c15" stroke="#57503f">
+    <rect x="84" y="310" width="152" height="44" rx="6"/><rect x="246" y="310" width="152" height="44" rx="6"/>
+    <rect x="408" y="310" width="152" height="44" rx="6"/><rect x="570" y="310" width="152" height="44" rx="6"/>
+    <rect x="732" y="310" width="110" height="44" rx="6"/>
+  </g>
+  <g fill="#ede8dd" font-size="10" text-anchor="middle">
+    <text x="160" y="328">event queue</text><text x="160" y="342">t → tieClass → seq</text>
+    <text x="322" y="328">8 schedulers</text><text x="322" y="342">fifo … edf</text>
+    <text x="484" y="328">program</text><text x="484" y="342">interpreter</text>
+    <text x="646" y="328">deadlock RAG</text><text x="646" y="342">cycle detection</text>
+    <text x="787" y="328">trace · gantt</text><text x="787" y="342">metrics</text>
+  </g>
+
+  <line x1="480" y1="370" x2="480" y2="408" stroke="#8a8271" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="500" y="394" fill="#8a8271" font-size="10">result JSON (micrort-result/1)</text>
+
+  <!-- Layer 3: Python -->
+  <rect x="60" y="410" width="410" height="110" rx="10" fill="#201c15" stroke="#3a332a"/>
+  <text x="84" y="436" fill="#f5b642" font-size="13" font-weight="bold">PYTHON ANALYSIS LAYER</text>
+  <text x="84" y="454" fill="#8a8271" font-size="10">services/api/ · FastAPI :3031</text>
+  <g fill="#ede8dd" font-size="10">
+    <text x="84" y="474">experiments · comparisons · reports</text>
+    <text x="84" y="490">RM/EDF theory (Liu &amp; Layland) vs measured</text>
+    <text x="84" y="506">metric recomputation cross-check</text>
+  </g>
+
+  <!-- Layer 4: web -->
+  <rect x="490" y="410" width="410" height="110" rx="10" fill="#201c15" stroke="#3a332a"/>
+  <text x="514" y="436" fill="#f5b642" font-size="13" font-weight="bold">WEB WORKSTATION</text>
+  <text x="514" y="454" fill="#8a8271" font-size="10">Next.js · React · TypeScript (single / route)</text>
+  <g fill="#ede8dd" font-size="10">
+    <text x="514" y="474">gantt timeline · live playback console</text>
+    <text x="514" y="490">RAG graph · memory map · metrics · compare</text>
+    <text x="514" y="506">visualizes trace data — never computes results</text>
+  </g>
+
+  <line x1="480" y1="465" x2="560" y2="465" stroke="#8a8271" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="520" y="458" fill="#8a8271" font-size="9" text-anchor="middle">REST /api/v1</text>
+  <text x="480" y="545" text-anchor="middle" fill="#8a8271" font-size="9">Copyright © 2026 Parsa Fathi · Apache-2.0 · original diagram for MicroRT-Lab</text>
+</svg>
