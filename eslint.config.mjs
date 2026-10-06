@@ -44,7 +44,9 @@ const eslintConfig = [...nextCoreWebVitals, ...nextTypescript, {
     "no-useless-escape": "off",
   },
 }, {
-  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts", "examples/**", "skills"]
+  // NOTE(task-6): engine/kernel CMake build dirs emit compiler_depend.ts files
+  // that are not TypeScript — ignored so `bun run lint` stays meaningful.
+  ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "engine/build/**", "kernel/build/**", "next-env.d.ts", "examples/**", "skills"]
 }];
 
 export default eslintConfig;
