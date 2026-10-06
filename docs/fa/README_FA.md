@@ -1,10 +1,15 @@
 # MICRORT-LAB — آزمایشگاه قطعی زمان‌بندی و سیستم‌عامل Real-Time
 
+[![CI](https://github.com/ParsaFathii/MICRORT-LAB/actions/workflows/ci.yml/badge.svg)](https://github.com/ParsaFathii/MICRORT-LAB/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ParsaFathii/MICRORT-LAB?display_name=tag&sort=semver)](https://github.com/ParsaFathii/MICRORT-LAB/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](../../LICENSE)
+
 مستندات فارسی پروژه‌ی MicroRT-Lab
 
 حق مالکیت © ۲۰۲۶ Parsa Fathi — مجوز Apache-2.0 — <https://github.com/ParsaFathii/MICRORT-LAB>
 
 - [نسخه‌ی انگلیسی / English documentation](../../README.md)
+- [دانلودها / Releases](https://github.com/ParsaFathii/MICRORT-LAB/releases) · [تغییرات / CHANGELOG](../../CHANGELOG.md)
 
 ---
 
@@ -27,6 +32,10 @@ MicroRT-Lab یک **آزمایشگاه شبیه‌سازی discrete-event قطع�
 MicroRT-Lab این را با شبیه‌سازی discrete-event جایگزین می‌کند: **همان config + همان seed ⇒ سند نتیجه‌ی بایت‌به‌بایت یکسان** (به‌جز فیلد زمان اجرای خود موتور، `wallMicros`). هر اجرا قابل replay، فیلتر، اندازه‌گیری، cross-check و مقایسه است. بهای این قطعیت، وفاداریِ کمتر به سخت‌افزار واقعی است: context switch یک هزینه‌ی ثابتِ tick است، I/O صرفاً یک تأخیر است و فقط یک CPU شبیه‌سازی می‌شود.
 
 ## معماری در یک نگاه
+
+دموی ۴۰ ثانیه‌ای از عملکرد ایستگاه کاری (اجرای آزمایش ← پخش Gantt ← مرورگر trace ← متریک‌ها ← مقایسه‌ی زنده‌ی زمان‌بندها) — ضبط‌شده از خود برنامه:
+
+![دموی MicroRT-Lab](../assets/demo.gif)
 
 ```
 experiments/*.json ─▶ kernel/ (C11)  ─▶ engine/ (C++20)  ─▶ services/api/ (Python 3.12)  ─▶ src/ (Next.js 16)

@@ -1,10 +1,15 @@
 # MICRORT-LAB
 
+[![CI](https://github.com/ParsaFathii/MICRORT-LAB/actions/workflows/ci.yml/badge.svg)](https://github.com/ParsaFathii/MICRORT-LAB/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ParsaFathii/MICRORT-LAB?display_name=tag&sort=semver)](https://github.com/ParsaFathii/MICRORT-LAB/releases)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Engine](https://img.shields.io/badge/engine-C%2B%2B20%20%C2%B7%20C11%20%C2%B7%20Python%20%C2%B7%20TypeScript-informational)](https://github.com/ParsaFathii/MICRORT-LAB)
+
 Deterministic Real-Time Operating System & Scheduling Laboratory
 
 Copyright © 2026 Parsa Fathi — Apache-2.0 — <https://github.com/ParsaFathii/MICRORT-LAB>
 
-**Documentation:** [English](#documentation) · [فارسی](docs/fa/README_FA.md)
+**Documentation:** [English](#documentation) · [فارسی](docs/fa/README_FA.md) · **Downloads:** [Releases](https://github.com/ParsaFathii/MICRORT-LAB/releases) · [CHANGELOG](CHANGELOG.md)
 
 ---
 
@@ -48,6 +53,11 @@ is fidelity to real hardware: context switches are a fixed tick cost, I/O is a p
 and there is one simulated CPU.
 
 ## The workstation
+
+A 40-second walkthrough (run experiment → Gantt playback → trace browser → metrics →
+live scheduler comparison) — captured from the real application:
+
+![MicroRT-Lab workstation demo](docs/assets/demo.gif)
 
 All screenshots below are from the running application (real experiment data, no mockups):
 

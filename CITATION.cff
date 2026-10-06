@@ -1,0 +1,43 @@
+# This file is used by GitHub to render citation metadata.
+# Submit research software to Zenodo/other archives with this metadata.
+
+cff-version: 1.2.0
+message: >-
+  If MicroRT-Lab supports your teaching or research, please cite it
+  using the metadata below.
+title: MicroRT-Lab
+subtitle: Deterministic Real-Time Operating System & Scheduling Laboratory
+type: software
+authors:
+  - given-names: Parsa
+    family-names: Fathi
+    orcid: "https://github.com/ParsaFathii"
+identifiers:
+  - type: url
+    value: "https://github.com/ParsaFathii/MICRORT-LAB"
+    description: Repository
+keywords:
+  - operating-systems
+  - scheduling
+  - real-time-systems
+  - discrete-event-simulation
+  - gantt-chart
+  - education
+  - rtos
+  - deadlock
+  - priority-inversion
+license: Apache-2.0
+commit-revision: v1.0.0
+version: 1.0.0
+date-released: "2026-10-06"
+repository-code: "https://github.com/ParsaFathii/MICRORT-LAB"
+abstract: >-
+  MicroRT-Lab is a deterministic discrete-event simulation laboratory for
+  operating-system scheduling and synchronization concepts. Workloads are
+  described in JSON; a C++ engine executes them tick-by-tick and produces
+  complete, reproducible result documents (event traces, Gantt timelines,
+  per-task accounting, metrics, deadlock reports, memory statistics).
+  A Python analysis layer manages experiments, recomputes metrics as an
+  independent cross-check, compares scheduler variants and generates
+  reports; a web workstation visualizes everything with playback,
+  resource-allocation graphs and memory maps.
