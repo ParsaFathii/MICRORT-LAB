@@ -1,9 +1,13 @@
 /**
  * MicroRT-Lab — typed API client for the Python analysis layer.
  *
- * The FastAPI service runs on port 3031 and is reached ONLY through the
- * sandbox gateway using RELATIVE URLs with the marker query parameter:
+ * The FastAPI service runs on port 3031 and is reached ONLY through relative
+ * URLs. Two transports carry the same URL shape:
  *   /api/v1/health?XTransformPort=3031
+ *   1. through the sandbox gateway (marker → Caddy → 127.0.0.1:3031)
+ *   2. directly on the Next.js dev server, where the catch-all route handler
+ *      at src/app/api/v1/[...path]/route.ts proxies server-side to 3031
+ *      (it strips the marker before forwarding).
  * Never absolute URLs, never other ports, never from server components.
  */
 
